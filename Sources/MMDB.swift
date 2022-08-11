@@ -16,6 +16,7 @@ public struct MMDBContinent {
 public struct MMDBCountry: CustomStringConvertible {
     public var continent = MMDBContinent()
     public var isoCode = ""
+    public var flag = ""
     public var names = [String: String]()
 
     init(dictionary: NSDictionary) {
@@ -32,13 +33,24 @@ public struct MMDBCountry: CustomStringConvertible {
         {
             self.isoCode = iso
             self.names = countryNames
+            self.flag = flag(country: self.isoCode)
         }
+    }
+    
+    private func flag(country:String) -> String {
+        let base : UInt32 = 127397
+        var s = ""
+        for v in country.unicodeScalars {
+            s.unicodeScalars.append(UnicodeScalar(base + v.value)!)
+        }
+        return String(s)
     }
     
     public var description: String {
         var s = "{\n"
         s += "  \"continent\": {\n"
         s += "    \"code\": \"" + (self.continent.code ?? "") + "\",\n"
+        s += "    \"flag\": \"" + (self.flag ?? "") + "\",\n"
         s += "    \"names\": {\n"
         var i = continent.names?.count ?? 0
         continent.names?.forEach {
@@ -64,6 +76,23 @@ public struct MMDBCountry: CustomStringConvertible {
         }
         s += "  }\n}"
         return s
+    }
+}
+
+public struct MMDBLocation {
+    public var country: MMDBCountry?
+    public var latitude: Double = 0
+    public var longitude: Double = 0
+    
+    init(dictionary: NSDictionary) {
+        if let dict = dictionary["location"] as? NSDictionary,
+           let lat = dict["latitude"] as? Double,
+           let long = dict["longitude"] as? Double {
+            self.latitude = lat
+            self.longitude = long
+        }
+        
+        self.country = MMDBCountry(dictionary: dictionary)
     }
 }
 
@@ -133,19 +162,20 @@ final public class MMDB {
     }
 
 
-    public func lookup(_ IPString: String) -> MMDBCountry? {
+    public func lookup(_ IPString: String) -> MMDBLocation? {
         guard let dict = lookup(ip: IPString) else {
             return nil
         }
 
-        let country = MMDBCountry(dictionary: dict)
+        let location = MMDBLocation(dictionary: dict)
 
-        return country
+        return location
     }
     
     private func dump(list: ListPtr?) -> (ptr: ListPtr?, out: Any?) {
         var list = list
-        switch getType(list!) {
+        let type = getType(list!)
+        switch type {
             
         case MMDB_DATA_TYPE_MAP:
             let dict = NSMutableDictionary()
@@ -171,7 +201,7 @@ final public class MMDB {
             list = list?.pointee.next
             return (ptr: list, out: str)
             
-        case MMDB_DATA_TYPE_UINT32:
+        case MMDB_DATA_TYPE_UINT32, MMDB_DATA_TYPE_UINT16:
             var res: NSNumber = 0
             if let entryData = list?.pointee.entry_data {
                 var mutableEntryData = entryData
@@ -182,9 +212,21 @@ final public class MMDB {
             }
             list = list?.pointee.next
             return (ptr: list, out: res)
+                
+                case MMDB_DATA_TYPE_FLOAT, MMDB_DATA_TYPE_DOUBLE:
+                var res: Double = 0
+                if let entryData = list?.pointee.entry_data {
+                    var mutableEntryData = entryData
+                    if let float = MMDB_get_entry_data_double(&mutableEntryData) {
+                        let v: Double = float.pointee
+                        res = v
+                    }
+                }
+                list = list?.pointee.next
+                return (ptr: list, out: res)
             
-        default: ()
-            
+        default:
+                print("data type: \(type)")
         }
         return (ptr: list, out: nil)
     }

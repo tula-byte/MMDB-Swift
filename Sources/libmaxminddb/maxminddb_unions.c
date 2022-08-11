@@ -19,3 +19,11 @@ uint32_t *MMDB_get_entry_data_uint32(MMDB_entry_data_s *ptr) {
 bool MMDB_get_entry_data_bool(MMDB_entry_data_s *ptr) {
     return ptr->boolean;
 }
+
+float *MMDB_get_entry_data_float(MMDB_entry_data_s *ptr) {
+    return &ptr->float_value;
+}
+
+double *MMDB_get_entry_data_double(MMDB_entry_data_s *ptr) {
+    return &ptr->double_value;
+}

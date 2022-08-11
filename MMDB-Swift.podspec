@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
                    Geo data by IP address.
                    DESC
 
-  s.homepage     = "https://github.com/lexrus/MMDB-Swift"
+  s.homepage     = "https://github.com/tula-byte/MMDB-Swift"
 
   s.license      = { :type => "APACHE 2.0", :file => "LICENSE" }
 

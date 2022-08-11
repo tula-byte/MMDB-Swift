@@ -1,18 +1,20 @@
 import XCTest
 import MMDB
+import MapKit
+import Foundation
 
 class MMDBTests: XCTestCase {
     var database: MMDB!
     
     override func setUp() {
         super.setUp()
-        database = MMDB(Bundle(for: MMDBTests.self).path(forResource: "GeoLite2-Country", ofType: "mmdb")!)
+        database = MMDB(Bundle(for: MMDBTests.self).path(forResource: "GeoLite2-City", ofType: "mmdb")!)
     }
 
     func testExample() {
-        XCTAssertEqual(database.lookup("202.108.22.220")?.isoCode, "CN")
-        XCTAssertEqual(database.lookup("8.8.8.8")?.isoCode, "US")
-        XCTAssertEqual(database.lookup("8.8.4.4")?.isoCode, "US")
+        XCTAssertEqual(database.lookup("202.108.22.220")?.country?.isoCode, "CN")
+        XCTAssertEqual(database.lookup("8.8.8.8")?.country?.isoCode, "US")
+        XCTAssertEqual(database.lookup("8.8.4.4")?.country?.isoCode, "US")
         
         XCTAssertNotNil(database.lookup(IPOfHost("youtube.com")!))
         XCTAssertNotNil(database.lookup(IPOfHost("facebook.com")!))
@@ -24,6 +26,14 @@ class MMDBTests: XCTestCase {
     func testCloudFlare() {
         let cloudflareDNS = database.lookup("1.1.1.1")
         XCTAssertNotNil(cloudflareDNS)
+    }
+    
+    func testCityLocation() {
+        let dns = database.lookup("8.8.4.4")
+        print(dns?.country)
+        print(dns!.latitude)
+        print(dns!.longitude)
+        XCTAssertNotNil(dns)
     }
 }
 

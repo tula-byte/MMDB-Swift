@@ -1779,7 +1779,7 @@ LOCAL double get_ieee754_double(const uint8_t *restrict p)
 {
     volatile double d;
     uint8_t *q = (void *)&d;
-#if MMDB_LITTLE_ENDIAN || _WIN32
+
     q[7] = p[0];
     q[6] = p[1];
     q[5] = p[2];
@@ -1788,9 +1788,7 @@ LOCAL double get_ieee754_double(const uint8_t *restrict p)
     q[2] = p[5];
     q[1] = p[6];
     q[0] = p[7];
-#else
-    memcpy(q, p, 8);
-#endif
+
 
     return d;
 }
